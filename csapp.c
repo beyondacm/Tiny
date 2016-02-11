@@ -1,5 +1,20 @@
 #include"csapp.h"
 
+/*********************************
+ *	Error-hanling functinos		 *
+ *								 *
+ *********************************/
+
+/****	$begin unixerror	 *****/
+void unix_error(char *msg)
+{
+	fprintf(stderr, "%s: %s\n", msg, strerror(errno));
+	exit(0);
+}
+
+
+
+
 /*********************************************************************
  * The Rio package - robust I/O functions
  **********************************************************************/
