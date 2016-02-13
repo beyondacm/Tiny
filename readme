@@ -1,6 +1,8 @@
 
-INTRODUCTION :
+Introduction : Implement the tiny webserver from CSAPP
 
-IMPLEMENT THE TINY WEBSERVER 
-FROM THE CSAPP
-
+Inrtoduction : 
+	Language     :  C
+	Environment  :  Linux  
+	Complier     :  gcc 
+	Useage       :  gcc CSAPP.c tiny.c -o tiny 
