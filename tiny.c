@@ -95,19 +95,71 @@ void clienterror(int fd, char *cause, char *errnum,	char *shortmsg, char *longms
 void read_requesthdrs(rio_t *rp)
 {
 	//TODO
+	char buf[MAXLINE];
+
+	Rio_readlineb(rp, buf, MAXLINE);
+	while(strcmp(buf, "\r\n")) {
+		Rio_readlineb(rp, buf, MAXLINE);
+	}
+	return ;
 }
 
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
 	//TODO
+	char *ptr;
+
+	if(!strstr(uri, "cgi-bin")) {	/*static content */
+		strcpy(cgiargs, "");
+		strcpy(filename, ".");
+		strcat(filename, uri);
+		if(uri[strlen(uri)-1] == '/') {
+			strcat(filename, "home.html");
+		}
+		return ;
+	}
 }
 
 void serve_static(int fd, char *filename, int filesize)
 {
 	//TODO
+	int srcfd;
+	char *srcp, filetype[MAXLINE], buf[MAXBUF];
+
+	/* send response headers to client */
+	get_filetype(filename, filetype);
+	sprintf(buf, "HTTP/1.0 200 OK\r\n");
+	sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+	sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
+	sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
+	Rio_writen(fd, buf, strlen(buf));
+
+	/* Send response body to client */
+	srcfd = Open(filename, O_RDONLY, 0);
+	srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
+	Close(srcfd);
+	Rio_writen(fd, srcp, filesize);
+	Munmap(srcp, filesize);	
 }
+
+/* get_filetype-derive file from file name */
+void get_filetype(char *filename, char *filetype) 
+{
+	if(strstr(filename, ".html")) {
+		strcpy(filetype, "text/html");
+	} else if(strstr(filename, ".gif")) {
+		strcpy(filetype, "image/gif");
+	} else if(strstr(filename, ".jpg")) {
+		strcpy(filetype, "image/jpeg");
+	} else {
+		strcpy(filetype, "text/plain");
+	}
+}
+
 
 void serve_dynamic(int fd, char *filename, char *cgiargs)
 {
 	//TODO
+	
+
 }
