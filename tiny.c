@@ -8,7 +8,7 @@
 void doit(int fd);
 void read_requesthdrs(rio_t *rp);
 int parse_uri(char *uri, char *filename, char *cgiargs);
-void serve_static(int fd, char *filename, int fileszie);
+void serve_static(int fd, char *filename, int filesize);
 void get_filetype(char *filename, char *filetype);
 void serve_dynamic(int fd, char *filename, char *cgiargs);
 void clienterror(int fd, char *cause, char *errnum, 
@@ -17,7 +17,24 @@ void clienterror(int fd, char *cause, char *errnum,
 int main(int argc, char **argv)
 {
 	//TODO
+	
+	int listenfd, connfd, port, clientlen;
+	struct sockaddr_in clientaddr;
 
+	/* Check command line args */
+	if(argc != 2) {
+		fprintf(stderr, "usage : %s <port>\n", argv[0]);
+		exit(1);
+	}
+	port = atoi(argv[1]);
+	
+	listenfd = Open_listenfd(port);
+	while(1) {
+		clientlen = sizeof(clientaddr);
+		connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+		doit(connfd);
+		Close(connfd);
+	}
 }
 
 
@@ -57,9 +74,10 @@ void doit(int fd)
 					"Tiny couldn't read the file");
 			return;
 		}
+		serve_static(fd, filename, sbuf.st_size);
 	} 
 	else {	/* Serve dynamic content */
-		if(!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
+		if( !(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
 			clienterror(fd, filename, "403", "Forbidden",
 					"Tiny couldn't run the CGI program");
 			return;
@@ -117,6 +135,17 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
 			strcat(filename, "home.html");
 		}
 		return ;
+	} else {						/* Dynamic content */
+		ptr = index(uri, '?');
+		if(ptr) {
+			strcpy(cgiargs, ptr+1);
+			*ptr = '\0';
+		} else {
+			strcpy(cgiargs, "");
+		}
+		strcpy(filename, ".");
+		strcat(filename, uri);
+		return 0;
 	}
 }
 
@@ -174,5 +203,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
 		Dup2(fd, STDOUT_FILENO);				/* Redirect stdout to client */
 		Execve(filename, emptylist, environ);	/* Run CGI program */
 	}
+
 	Wait(NULL);									/* Parent waits and reaps child */
+
 }

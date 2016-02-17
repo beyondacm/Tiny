@@ -5,4 +5,4 @@ Inrtoduction :
 	Language     :  C
 	Environment  :  Linux  
 	Complier     :  gcc 
-	Useage       :  gcc CSAPP.c tiny.c -o tiny 
+	Useage       :  gcc csapp.c tiny.c -o tiny 
